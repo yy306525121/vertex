@@ -42,7 +42,7 @@ generate_static:
     - tar -czvf ../static.tar.gz static
   artifacts:
     expire_in: 100 mins
-    paths: 
+    paths:
       - static.tar.gz
 
 
@@ -51,7 +51,7 @@ build_docker_image_and_push:
   variables:
     DOCKER_TLS_CERTDIR: "/certs"
     DOCKER_DRIVER: overlay2
-    IMAGE_TAG_LATEST: lswl/vertex:latest
+    IMAGE_TAG_LATEST: akafra/vertex:latest
     DOCKER_BUILDKIT: 1
   services:
     - docker:20.10-dind
@@ -60,7 +60,7 @@ build_docker_image_and_push:
     - apk add tzdata curl coreutils
     - docker info
     - CI_COMMIT_BRANCH=`[ $CI_COMMIT_TAG ] && echo $CI_COMMIT_TAG || echo $CI_COMMIT_BRANCH`
-    - IMAGE_TAG_BRANCH=lswl/vertex:$CI_COMMIT_BRANCH
+    - IMAGE_TAG_BRANCH=akafra/vertex:$CI_COMMIT_BRANCH
     - echo $IMAGE_TAG_SHA
     - echo $IMAGE_TAG_LATEST
     - echo $IMAGE_TAG_BRANCH
@@ -76,7 +76,7 @@ build_docker_image_and_push:
     - docker buildx create --name buildx_name --use context_name
     - docker buildx inspect --bootstrap
   stage: build_docker_image_and_push
-  tags: 
+  tags:
     - compile
   script:
     - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
@@ -85,12 +85,12 @@ build_docker_image_and_push:
     - cd docker
     - sed -i 's/COMMIT_ID/'$CI_COMMIT_SHA'/' Dockerfile
     - ls src/static
-    - docker pull --platform linux/arm64 lswl/vertex:latest || echo 'fail'
-    - docker pull --platform linux/amd64 lswl/vertex:latest || echo 'fail'
+    - docker pull --platform linux/arm64 akafra/vertex:latest || echo 'fail'
+    - docker pull --platform linux/amd64 akafra/vertex:latest || echo 'fail'
     - |
-      docker buildx build --platform linux/amd64,linux/arm64 --cache-from lswl/vertex --tag $IMAGE_TAG_LATEST --build-arg BUILDKIT_INLINE_CACHE=1 . --push
+      docker buildx build --platform linux/amd64,linux/arm64 --cache-from akafra/vertex --tag $IMAGE_TAG_LATEST --build-arg BUILDKIT_INLINE_CACHE=1 . --push
     - |
-      docker buildx build --platform linux/amd64,linux/arm64 --cache-from lswl/vertex --tag $IMAGE_TAG_BRANCH --build-arg BUILDKIT_INLINE_CACHE=1 . --push
+      docker buildx build --platform linux/amd64,linux/arm64 --cache-from akafra/vertex --tag $IMAGE_TAG_BRANCH --build-arg BUILDKIT_INLINE_CACHE=1 . --push
     - |
       curl --location --request POST 'https://vertex-push.lswl.workers.dev' \
       --header 'Content-Type: application/json' \
